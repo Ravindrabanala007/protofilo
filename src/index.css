@@ -1,0 +1,176 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+/* ==========================================================================
+   Global CSS Variable Design System
+   ========================================================================== */
+:root,
+.dark {
+  /* Colors (Dark Theme - Default) */
+  --bg-primary: hsl(240, 15%, 8%);
+  --bg-secondary: hsl(240, 15%, 12%);
+  --bg-glass: hsla(240, 15%, 14%, 0.7);
+  --text-primary: hsl(0, 0%, 98%);
+  --text-secondary: hsl(240, 5%, 70%);
+  --text-muted: hsl(240, 5%, 55%);
+  --border-color: hsla(240, 5%, 20%, 0.5);
+  --border-hover: hsla(240, 5%, 35%, 0.7);
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  
+  --accent-primary: hsl(250, 100%, 65%);
+  --accent-secondary: hsl(180, 100%, 45%);
+  --accent-gradient: linear-gradient(135deg, hsl(250, 100%, 65%), hsl(280, 100%, 60%));
+  --accent-gradient-hover: linear-gradient(135deg, hsl(250, 100%, 70%), hsl(280, 100%, 65%));
+  --secondary-gradient: linear-gradient(135deg, hsl(180, 100%, 45%), hsl(160, 100%, 40%));
+  --accent-glow: hsla(250, 100%, 65%, 0.2);
+  --accent-glow-secondary: hsla(180, 100%, 45%, 0.15);
+
+  scroll-behavior: smooth;
+}
+
+/* Light Theme Variables */
+.light {
+  --bg-primary: hsl(220, 20%, 97%);
+  --bg-secondary: hsl(0, 0%, 100%);
+  --bg-glass: hsla(0, 0%, 100%, 0.85);
+  --text-primary: hsl(220, 25%, 12%);
+  --text-secondary: hsl(220, 15%, 38%);
+  --text-muted: hsl(220, 10%, 52%);
+  --border-color: hsla(220, 15%, 82%, 0.9);
+  --border-hover: hsla(220, 15%, 65%, 1);
+  --shadow-color: rgba(15, 23, 42, 0.1);
+
+  --accent-primary: hsl(250, 85%, 50%);
+  --accent-secondary: hsl(180, 85%, 32%);
+  --accent-gradient: linear-gradient(135deg, hsl(250, 85%, 50%), hsl(280, 85%, 45%));
+  --accent-gradient-hover: linear-gradient(135deg, hsl(250, 85%, 55%), hsl(280, 85%, 50%));
+  --secondary-gradient: linear-gradient(135deg, hsl(180, 85%, 32%), hsl(160, 85%, 28%));
+  --accent-glow: hsla(250, 85%, 50%, 0.12);
+  --accent-glow-secondary: hsla(180, 85%, 32%, 0.1);
+}
+
+/* ==========================================================================
+   Base resets
+   ========================================================================== */
+html {
+  color-scheme: dark;
+}
+
+html.light {
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+/* Button utilities */
+.btn {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: var(--accent-gradient);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--accent-gradient-hover);
+  box-shadow: 0 0 15px var(--accent-glow);
+}
+
+.btn-secondary {
+  background: var(--bg-glass);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-hover);
+}
+
+/* Utilities */
+.glass-panel {
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+}
+
+.gradient-text {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Infinite Horizontal Marquee */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 120s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Desktop Custom Cursor Support */
+@media (min-width: 1024px) {
+  body.custom-cursor-active {
+    cursor: none !important;
+  }
+  body.custom-cursor-active a,
+  body.custom-cursor-active button,
+  body.custom-cursor-active [role="button"],
+  body.custom-cursor-active .clickable,
+  body.custom-cursor-active .cursor-pointer,
+  body.custom-cursor-active input,
+  body.custom-cursor-active select,
+  body.custom-cursor-active textarea {
+    cursor: pointer !important;
+  }
+}
+
+/* Mobile orbit animation fix - disable on small screens */
+@media (max-width: 1023px) {
+  .animate-orbit {
+    display: none;
+  }
+}
