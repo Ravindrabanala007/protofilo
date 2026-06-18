@@ -23,10 +23,8 @@ export const Navbar = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Sticky header toggle
       setIsSticky(window.scrollY > 40);
     };
-
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -42,19 +40,20 @@ export const Navbar = () => {
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-        {/* Logo Branding: MERN + AI custom animated logo */}
+        {/* Logo Branding: Animated Signature */}
         <Link to="/" className="flex items-center gap-2.5 group">
           <div className="relative w-9 h-9 flex items-center justify-center">
-            {/* Spinning Outer Orbit */}
             <svg className="absolute w-full h-full animate-[spin_6s_linear_infinite] group-hover:scale-110 transition-transform duration-300" viewBox="0 0 100 100">
               <ellipse cx="50" cy="50" rx="42" ry="14" fill="none" stroke="currentColor" className="text-accent-primary" strokeWidth="2" transform="rotate(45, 50, 50)" />
               <ellipse cx="50" cy="50" rx="42" ry="14" fill="none" stroke="currentColor" className="text-accent-primary" strokeWidth="2" transform="rotate(135, 50, 50)" />
             </svg>
-            {/* Core Neural Pulse Dot */}
             <span className="w-2.5 h-2.5 rounded-full bg-accent-secondary shadow-[0_0_10px_var(--accent-glow-secondary)] group-hover:animate-ping" />
           </div>
-          <span className="text-lg font-black tracking-tight text-textColor-primary">
-            Ravindra<span className="text-accent-primary">.AI</span>
+          <span
+            className="text-xl font-bold gradient-text whitespace-nowrap"
+            style={{ fontFamily: "'Dancing Script', cursive" }}
+          >
+            Ravindra Banala
           </span>
         </Link>
 
@@ -81,40 +80,20 @@ export const Navbar = () => {
           </ul>
         </nav>
 
-        {/* Actions Menu (Theme Switch, Socials & Mobile Toggle) */}
+        {/* Actions Menu */}
         <div className="flex items-center gap-3">
-          {/* Social Links inside Header */}
           <div className="hidden lg:flex items-center gap-2 mr-2">
-            <a 
-              href="https://github.com" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="w-9 h-9 rounded-xl bg-bg-secondary border border-borderColor-base flex items-center justify-center text-textColor-secondary hover:text-accent-primary hover:border-accent-primary transition-all duration-300" 
-              title="GitHub"
-            >
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-xl bg-bg-secondary border border-borderColor-base flex items-center justify-center text-textColor-secondary hover:text-accent-primary hover:border-accent-primary transition-all duration-300" title="GitHub">
               <FaGithub className="text-sm" />
             </a>
-            <a 
-              href="https://linkedin.com" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="w-9 h-9 rounded-xl bg-bg-secondary border border-borderColor-base flex items-center justify-center text-textColor-secondary hover:text-accent-primary hover:border-accent-primary transition-all duration-300" 
-              title="LinkedIn"
-            >
+            <a href="https://www.linkedin.com/in/ravindra-banala-b0a956277/" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-xl bg-bg-secondary border border-borderColor-base flex items-center justify-center text-textColor-secondary hover:text-accent-primary hover:border-accent-primary transition-all duration-300" title="LinkedIn">
               <FaLinkedin className="text-sm" />
             </a>
-            <a 
-              href="https://instagram.com" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="w-9 h-9 rounded-xl bg-bg-secondary border border-borderColor-base flex items-center justify-center text-textColor-secondary hover:text-accent-primary hover:border-accent-primary transition-all duration-300" 
-              title="Instagram"
-            >
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-xl bg-bg-secondary border border-borderColor-base flex items-center justify-center text-textColor-secondary hover:text-accent-primary hover:border-accent-primary transition-all duration-300" title="Instagram">
               <FaInstagram className="text-sm" />
             </a>
           </div>
 
-          {/* Theme Switcher Toggle */}
           <button
             onClick={toggleTheme}
             className="w-9 h-9 rounded-xl bg-bg-secondary border border-borderColor-base flex items-center justify-center text-textColor-primary hover:text-accent-primary hover:border-accent-primary transition-all duration-300 shadow-sm cursor-pointer"
@@ -123,7 +102,6 @@ export const Navbar = () => {
             {theme === 'dark' ? <FaSun className="text-sm" /> : <FaMoon className="text-sm" />}
           </button>
 
-          {/* Mobile menu hamburger toggle button */}
           <button
             onClick={() => setIsMenuOpen(prev => !prev)}
             className="md:hidden w-9 h-9 rounded-xl bg-bg-secondary border border-borderColor-base flex items-center justify-center text-textColor-primary hover:text-accent-primary transition-all duration-300 cursor-pointer"
@@ -158,7 +136,7 @@ export const Navbar = () => {
           ))}
           <li className="flex gap-4 pt-3 border-t border-borderColor-base/30 w-1/2 justify-center">
             <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-textColor-secondary hover:text-accent-primary"><FaGithub className="text-lg" /></a>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-textColor-secondary hover:text-accent-primary"><FaLinkedin className="text-lg" /></a>
+            <a href="https://www.linkedin.com/in/ravindra-banala-b0a956277/" target="_blank" rel="noopener noreferrer" className="text-textColor-secondary hover:text-accent-primary"><FaLinkedin className="text-lg" /></a>
             <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-textColor-secondary hover:text-accent-primary"><FaInstagram className="text-lg" /></a>
           </li>
         </ul>

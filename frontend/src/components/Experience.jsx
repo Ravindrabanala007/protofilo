@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaBriefcase, FaArrowRight } from 'react-icons/fa';
+import { FaArrowRight } from 'react-icons/fa';
 import { usePortfolio } from '../context/PortfolioContext';
 
 export const Experience = ({ limit }) => {

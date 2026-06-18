@@ -2,8 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   FaSignOutAlt,
-  FaDownload,
-  FaUpload,
   FaUndo,
   FaPlus,
   FaEdit,
@@ -13,9 +11,28 @@ import {
   FaUser,
   FaEye,
   FaLink,
+  FaBell,
+  FaEnvelope,
+  FaToggleOn,
+  FaToggleOff,
+  FaTools,
+  FaExternalLinkAlt,
 } from 'react-icons/fa';
 import { usePortfolio } from '../context/PortfolioContext';
 import { generateId, resolveAssetUrl } from '../data/defaultPortfolio';
+import {
+  getContacts,
+  deleteContact,
+  getNotifications,
+  createNotification,
+  toggleNotification,
+  toggleNotificationBlast,
+  deleteNotification,
+  toggleMaintenanceMode,
+  toggleGlobalBlast,
+  getMaintenanceStatus,
+  getGlobalBlastStatus,
+} from '../services/api';
 
 const TABS = ['Projects', 'Certifications', 'Skills', 'Education', 'Experience', 'Achievements'];
 const TAB_KEYS = {
@@ -38,6 +55,7 @@ const emptyForms = {
     liveDemoUrl: '',
     cardLetter: '',
     featured: false,
+    category: 'development',
     imageUrl: '',
     assistaPath: '',
     imageData: '',
@@ -96,8 +114,7 @@ const inputClass =
 
 export const Admin = () => {
   const navigate = useNavigate();
-  const { data, updateData, resetPortfolio, importPortfolio, visitorCount } = usePortfolio();
-  const importInputRef = useRef(null);
+  const { data, updateData, resetPortfolio, visitorCount, maintenanceMode, setMaintenanceMode, globalBlast, setGlobalBlast } = usePortfolio();
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
 
@@ -108,7 +125,60 @@ export const Admin = () => {
   const [aboutForm, setAboutForm] = useState(data.about);
   const [settingsForm, setSettingsForm] = useState(data.settings ?? {});
   const [newCatName, setNewCatName] = useState('');
+  const [newProjCatName, setNewProjCatName] = useState('');
 
+  // Contact messages state
+  const [contacts, setContacts] = useState([]);
+  const [contactsLoading, setContactsLoading] = useState(true);
+
+  // Notifications state
+  const [notifications, setNotifications] = useState([]);
+  const [notifLoading, setNotifLoading] = useState(true);
+  const [notifForm, setNotifForm] = useState({ title: '', message: '' });
+  const [maintenanceLoading, setMaintenanceLoading] = useState(false);
+  const [globalBlastLoading, setGlobalBlastLoading] = useState(false);
+
+  // Sync maintenance + global blast from backend on admin load
+  useEffect(() => {
+    const syncGlobalConfig = async () => {
+      if (!sessionStorage.getItem('admin_token')) return;
+      try {
+        const [maintenanceData, blastData] = await Promise.all([
+          getMaintenanceStatus(),
+          getGlobalBlastStatus(),
+        ]);
+        setMaintenanceMode(maintenanceData.maintenanceMode ?? false);
+        setGlobalBlast(blastData.globalBlast ?? false);
+      } catch (err) {
+        console.warn('Failed to sync global config:', err.message);
+      }
+    };
+    syncGlobalConfig();
+  }, [setMaintenanceMode, setGlobalBlast]);
+
+  // Fetch contacts and notifications on mount
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      try {
+        const [contactsData, notifsData] = await Promise.all([
+          getContacts(),
+          getNotifications(),
+        ]);
+        setContacts(contactsData);
+        setNotifications(notifsData);
+      } catch (err) {
+        console.warn('Failed to fetch admin data:', err.message);
+      } finally {
+        setContactsLoading(false);
+        setNotifLoading(false);
+      }
+    };
+    if (sessionStorage.getItem('admin_token')) {
+      fetchAdminData();
+    }
+  }, []);
+
+  // ─── Skill Categories ───────────────────────────────
   const handleAddCategory = (e) => {
     e.preventDefault();
     if (!newCatName.trim()) return;
@@ -134,6 +204,121 @@ export const Admin = () => {
     }));
   };
 
+  // ─── Project Categories ─────────────────────────────
+  const handleAddProjectCategory = (e) => {
+    e.preventDefault();
+    if (!newProjCatName.trim()) return;
+    const catId = newProjCatName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const exists = (data.projectCategories ?? []).some((c) => c.id === catId);
+    if (exists) {
+      alert('A project category with this name already exists.');
+      return;
+    }
+    const newCat = { id: catId, name: newProjCatName.trim() };
+    updateData((prev) => ({
+      ...prev,
+      projectCategories: [...(prev.projectCategories ?? []), newCat],
+    }));
+    setNewProjCatName('');
+  };
+
+  const handleRemoveProjectCategory = (catId) => {
+    if (!window.confirm('Remove this project category? Projects with this category will keep their current category value.')) return;
+    updateData((prev) => ({
+      ...prev,
+      projectCategories: (prev.projectCategories ?? []).filter((c) => c.id !== catId),
+    }));
+  };
+
+  // ─── Contact Messages ───────────────────────────────
+  const handleDeleteContact = async (id) => {
+    if (!window.confirm('Delete this contact message?')) return;
+    try {
+      await deleteContact(id);
+      setContacts((prev) => prev.filter((c) => c._id !== id));
+    } catch (err) {
+      alert('Failed to delete contact: ' + err.message);
+    }
+  };
+
+  // ─── Notifications ──────────────────────────────────
+  const handleCreateNotification = async (e) => {
+    e.preventDefault();
+    if (!notifForm.title.trim() || !notifForm.message.trim()) return;
+    try {
+      const newNotif = await createNotification(notifForm);
+      setNotifications((prev) => [newNotif, ...prev]);
+      setNotifForm({ title: '', message: '' });
+    } catch (err) {
+      alert('Failed to create notification: ' + err.message);
+    }
+  };
+
+  const handleToggleNotification = async (id, currentActive) => {
+    try {
+      const updated = await toggleNotification(id, !currentActive);
+      // If toggling on, server deactivates all others
+      if (!currentActive) {
+        setNotifications((prev) =>
+          prev.map((n) => (n._id === id ? updated : { ...n, isActive: false }))
+        );
+      } else {
+        setNotifications((prev) =>
+          prev.map((n) => (n._id === id ? updated : n))
+        );
+      }
+    } catch (err) {
+      alert('Failed to toggle notification: ' + err.message);
+    }
+  };
+
+  const handleDeleteNotification = async (id) => {
+    if (!window.confirm('Delete this notification?')) return;
+    try {
+      await deleteNotification(id);
+      setNotifications((prev) => prev.filter((n) => n._id !== id));
+    } catch (err) {
+      alert('Failed to delete notification: ' + err.message);
+    }
+  };
+
+  const handleToggleBlast = async (id, currentBlast) => {
+    try {
+      const updated = await toggleNotificationBlast(id, !currentBlast);
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === id ? updated : n))
+      );
+    } catch (err) {
+      alert('Failed to toggle blast: ' + err.message);
+    }
+  };
+
+  const handleToggleMaintenance = async () => {
+    setMaintenanceLoading(true);
+    try {
+      const nextMode = !maintenanceMode;
+      const result = await toggleMaintenanceMode(nextMode);
+      setMaintenanceMode(result.maintenanceMode);
+    } catch (err) {
+      alert('Failed to toggle maintenance mode: ' + err.message);
+    } finally {
+      setMaintenanceLoading(false);
+    }
+  };
+
+  const handleToggleGlobalBlast = async () => {
+    setGlobalBlastLoading(true);
+    try {
+      const nextBlast = !globalBlast;
+      const result = await toggleGlobalBlast(nextBlast);
+      setGlobalBlast(result.globalBlast);
+    } catch (err) {
+      alert('Failed to toggle global blast: ' + err.message);
+    } finally {
+      setGlobalBlastLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (sessionStorage.getItem('admin_auth') !== 'true') {
       navigate('/login', { replace: true });
@@ -141,6 +326,7 @@ export const Admin = () => {
   }, [navigate]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- keep admin forms in sync with portfolio data
     setAboutForm(data.about);
     setSettingsForm(data.settings ?? {});
   }, [data.about, data.settings]);
@@ -149,36 +335,8 @@ export const Admin = () => {
 
   const handleLogout = () => {
     sessionStorage.removeItem('admin_auth');
+    sessionStorage.removeItem('admin_token');
     navigate('/');
-  };
-
-  const handleExport = () => {
-    const exportData = { ...data, visitorCount };
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'portfolio_config.json';
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleImport = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const parsed = JSON.parse(ev.target.result);
-        delete parsed.visitorCount;
-        importPortfolio(parsed);
-        alert('Portfolio data imported successfully.');
-      } catch {
-        alert('Invalid JSON file.');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
   };
 
   const handleReset = () => {
@@ -205,6 +363,9 @@ export const Admin = () => {
     } else if (tabKey === 'skills') {
       const defaultCat = data.skillCategories?.[0]?.id ?? 'frontend';
       setForm({ ...emptyForms.skills, category: defaultCat });
+    } else if (tabKey === 'projects') {
+      const defaultCat = data.projectCategories?.[0]?.id ?? 'development';
+      setForm({ ...emptyForms.projects, category: defaultCat });
     } else {
       setForm({ ...emptyForms[tabKey] });
     }
@@ -252,6 +413,7 @@ export const Admin = () => {
         liveDemoUrl: item.liveDemoUrl ?? '',
         cardLetter: item.cardLetter ?? '',
         featured: item.featured ?? false,
+        category: item.category ?? 'development',
         imageUrl: item.imageUrl ?? '',
         assistaPath: item.assistaPath ?? '',
         imageData: item.imageData ?? '',
@@ -363,7 +525,7 @@ export const Admin = () => {
         liveDemoUrl: form.liveDemoUrl,
         cardLetter: form.cardLetter || form.title.slice(0, 2).toUpperCase(),
         featured: form.featured,
-        category: 'development',
+        category: form.category || 'development',
         imageUrl: form.imageUrl,
         assistaPath: form.assistaPath,
         imageData: form.imageData,
@@ -551,6 +713,10 @@ export const Admin = () => {
             {tabKey === 'projects' && (
               <>
                 <h3 className="font-bold text-textColor-primary">{item.title}</h3>
+                <div className="flex gap-2">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-accent-primary/10 border border-accent-primary/20 text-accent-primary uppercase tracking-wider">{item.category}</span>
+                  {item.featured && <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 uppercase tracking-wider">Featured</span>}
+                </div>
                 <p className="text-sm text-textColor-secondary line-clamp-2">{item.description}</p>
               </>
             )}
@@ -644,6 +810,10 @@ export const Admin = () => {
     }
 
     if (tabKey === 'projects') {
+      const projCategories = data.projectCategories ?? [
+        { id: 'development', name: 'Development' },
+        { id: 'networking', name: 'Networking' },
+      ];
       return (
         <>
           {[['Title', 'title'], ['Description', 'description', 'textarea'], ['Tech Stack', 'techStack'], ['GitHub URL', 'githubUrl'], ['Live Demo URL', 'liveDemoUrl'], ['Card Letter', 'cardLetter'], ['Image URL', 'imageUrl'], ['Assista Path', 'assistaPath']].map(
@@ -665,6 +835,14 @@ export const Admin = () => {
                 </div>
               )
           )}
+          <div>
+            <label className="block text-sm font-semibold text-textColor-secondary mb-1">Category</label>
+            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className={inputClass}>
+              {projCategories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
           <div>
             <label className="block text-sm font-semibold text-textColor-secondary mb-1">Upload image</label>
             <input ref={imageInputRef} type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && readFileAsDataUri(e.target.files[0], (d) => setForm({ ...form, imageData: d, imageUrl: '' }))} className="w-full text-sm" />
@@ -769,22 +947,71 @@ export const Admin = () => {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-8">
+        {/* Global Configuration */}
         <section className="glass-panel rounded-2xl p-6 border border-borderColor-base">
-          <h2 className="font-heading text-lg font-bold mb-4">Global Configuration</h2>
+          <h2 className="font-heading text-lg font-bold mb-2">Global Configuration</h2>
+          <p className="text-xs text-textColor-muted mb-4">
+            Site-wide controls for maintenance mode, celebration blast, and data reset.
+          </p>
           <div className="flex flex-wrap gap-3">
-            <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-primary text-white text-sm font-semibold cursor-pointer">
-              <FaDownload /> Export Data
+            <button
+              onClick={handleToggleMaintenance}
+              disabled={maintenanceLoading}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-all disabled:opacity-60 ${
+                maintenanceMode
+                  ? 'bg-amber-500/20 text-amber-500 border border-amber-500/40 hover:bg-amber-500/30'
+                  : 'bg-bg-secondary border border-borderColor-base text-textColor-secondary hover:border-amber-500'
+              }`}
+            >
+              {maintenanceMode ? <FaToggleOn className="text-base" /> : <FaToggleOff className="text-base" />}
+              <FaTools />
+              {maintenanceLoading ? 'Updating...' : maintenanceMode ? 'Maintenance ON' : 'Maintenance OFF'}
             </button>
-            <button onClick={() => importInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-borderColor-base text-sm font-semibold cursor-pointer">
-              <FaUpload /> Import Data
+
+            <Link
+              to="/maintenance"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-borderColor-base text-textColor-secondary text-sm font-semibold hover:border-accent-primary hover:text-accent-primary transition-all"
+            >
+              <FaExternalLinkAlt /> Preview Maintenance Page
+            </Link>
+
+            <button
+              onClick={handleToggleGlobalBlast}
+              disabled={globalBlastLoading}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-all disabled:opacity-60 ${
+                globalBlast
+                  ? 'bg-amber-500/20 text-amber-500 border border-amber-500/40 hover:bg-amber-500/30'
+                  : 'bg-bg-secondary border border-borderColor-base text-textColor-secondary hover:border-amber-500'
+              }`}
+              title="Toggle site-wide celebration blast animation for all visitors"
+            >
+              <span className="text-sm">🎉</span>
+              {globalBlastLoading
+                ? 'Updating...'
+                : globalBlast
+                  ? 'Global Blast ON'
+                  : 'Global Blast OFF'}
             </button>
-            <input ref={importInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
+
             <button onClick={handleReset} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-500/40 text-red-500 text-sm font-semibold cursor-pointer">
               <FaUndo /> Reset Defaults
             </button>
           </div>
+          {maintenanceMode && (
+            <p className="text-xs text-amber-500 mt-3 font-semibold">
+              Maintenance mode is active — public visitors see the maintenance page. Admin and login remain accessible.
+            </p>
+          )}
+          {globalBlast && (
+            <p className="text-xs text-amber-500 mt-3 font-semibold">
+              Global blast is active — visitors will see the celebration animation on the homepage.
+            </p>
+          )}
         </section>
 
+        {/* Profile Section */}
         <section className="glass-panel rounded-2xl p-6 border border-borderColor-base">
           <h2 className="font-heading text-lg font-bold mb-4 flex items-center gap-2">
             <FaUser className="text-accent-primary" /> Profile, Photo & Resume Links
@@ -833,6 +1060,151 @@ export const Admin = () => {
           </div>
         </section>
 
+        {/* ─── Notifications Section ─────────────────── */}
+        <section className="glass-panel rounded-2xl p-6 border border-borderColor-base">
+          <h2 className="font-heading text-lg font-bold mb-4 flex items-center gap-2">
+            <FaBell className="text-accent-secondary" /> Notifications
+          </h2>
+          <p className="text-xs text-textColor-muted mb-4">
+            Post notifications to display on the homepage. Toggle <strong>ON</strong> to make it live. Only one can be active at a time.
+          </p>
+
+          {/* Create Notification Form */}
+          <form onSubmit={handleCreateNotification} className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+            <input
+              value={notifForm.title}
+              onChange={(e) => setNotifForm({ ...notifForm, title: e.target.value })}
+              placeholder="Notification Title"
+              required
+              className={inputClass}
+            />
+            <input
+              value={notifForm.message}
+              onChange={(e) => setNotifForm({ ...notifForm, message: e.target.value })}
+              placeholder="Notification Message"
+              required
+              className={inputClass}
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 bg-accent-secondary text-white text-sm font-semibold rounded-lg hover:bg-accent-secondary/85 cursor-pointer flex items-center justify-center gap-2"
+            >
+              <FaPlus /> Post Notification
+            </button>
+          </form>
+
+          {/* Notification List */}
+          {notifLoading ? (
+            <p className="text-textColor-muted text-sm text-center py-4">Loading notifications...</p>
+          ) : notifications.length === 0 ? (
+            <p className="text-textColor-muted text-sm text-center py-4">No notifications yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {notifications.map((notif) => (
+                <div
+                  key={notif._id}
+                  className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center gap-3 transition-all ${
+                    notif.isActive
+                      ? 'border-emerald-500/50 bg-emerald-500/5'
+                      : 'border-borderColor-base bg-bg-primary/50'
+                  }`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-bold text-textColor-primary text-sm truncate">{notif.title}</h4>
+                      {notif.isActive && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-500 uppercase tracking-wider shrink-0">LIVE</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-textColor-secondary truncate">{notif.message}</p>
+                    <p className="text-[10px] text-textColor-muted mt-1">
+                      {new Date(notif.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                    <button
+                      onClick={() => handleToggleNotification(notif._id, notif.isActive)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
+                        notif.isActive
+                          ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30'
+                          : 'bg-bg-secondary border border-borderColor-base text-textColor-secondary hover:border-accent-primary'
+                      }`}
+                    >
+                      {notif.isActive ? <FaToggleOn className="text-base" /> : <FaToggleOff className="text-base" />}
+                      {notif.isActive ? 'LIVE' : 'OFF'}
+                    </button>
+                    <button
+                      onClick={() => handleToggleBlast(notif._id, notif.isBlast)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
+                        notif.isBlast
+                          ? 'bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border border-amber-500/40'
+                          : 'bg-bg-secondary border border-borderColor-base text-textColor-secondary hover:border-amber-500'
+                      }`}
+                      title="Toggle celebration blast animation for visitors"
+                    >
+                      <span className="text-sm">🎉</span>
+                      {notif.isBlast ? 'Blast ON' : 'Blast'}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteNotification(notif._id)}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-red-500/30 text-red-500 text-xs cursor-pointer hover:bg-red-500/10 transition-all"
+                    >
+                      <FaTrash /> Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* ─── Contact Messages Section ──────────────── */}
+        <section className="glass-panel rounded-2xl p-6 border border-borderColor-base">
+          <h2 className="font-heading text-lg font-bold mb-4 flex items-center gap-2">
+            <FaEnvelope className="text-accent-primary" /> Contact Messages
+          </h2>
+
+          {contactsLoading ? (
+            <p className="text-textColor-muted text-sm text-center py-4">Loading messages...</p>
+          ) : contacts.length === 0 ? (
+            <p className="text-textColor-muted text-sm text-center py-4">No contact messages yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {contacts.map((contact) => (
+                <div
+                  key={contact._id}
+                  className="p-4 rounded-xl border border-borderColor-base bg-bg-primary/50 flex flex-col sm:flex-row gap-4"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="w-8 h-8 rounded-full bg-accent-primary/10 border border-accent-primary/20 flex items-center justify-center text-accent-primary text-xs font-bold shrink-0">
+                        {contact.name?.charAt(0).toUpperCase()}
+                      </span>
+                      <div>
+                        <h4 className="font-bold text-textColor-primary text-sm">{contact.name}</h4>
+                        <p className="text-xs text-accent-primary">{contact.email}</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-textColor-secondary mt-2 pl-11">{contact.message}</p>
+                    <p className="text-[10px] text-textColor-muted mt-2 pl-11">
+                      {new Date(contact.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="flex items-start shrink-0">
+                    <button
+                      onClick={() => handleDeleteContact(contact._id)}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-red-500/30 text-red-500 text-xs cursor-pointer"
+                    >
+                      <FaTrash /> Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* ─── Content Editor Tabs ───────────────────── */}
         <section className="glass-panel rounded-2xl p-6 border border-borderColor-base">
           <div className="flex flex-wrap gap-2 mb-6">
             {TABS.map((tab) => (
@@ -847,6 +1219,55 @@ export const Admin = () => {
               </button>
             ))}
           </div>
+
+          {/* Project Categories Manager */}
+          {activeTab === 'Projects' && (
+            <div className="mb-6 p-4 rounded-xl border border-borderColor-base bg-bg-primary/30 space-y-4">
+              <h3 className="font-heading text-sm font-bold text-textColor-primary">
+                Manage Project Categories
+              </h3>
+              <form onSubmit={handleAddProjectCategory} className="flex flex-wrap gap-3 items-end">
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-xs font-semibold text-textColor-secondary mb-1">New Category Name</label>
+                  <input
+                    type="text"
+                    value={newProjCatName}
+                    onChange={(e) => setNewProjCatName(e.target.value)}
+                    placeholder="e.g. AI & Machine Learning"
+                    className={inputClass}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-accent-primary text-white text-sm font-semibold rounded-lg hover:bg-accent-primary/85 cursor-pointer h-10"
+                >
+                  Add Category
+                </button>
+              </form>
+              <div className="flex flex-wrap gap-2 pt-2">
+                {(data.projectCategories ?? [
+                  { id: 'development', name: 'Development' },
+                  { id: 'networking', name: 'Networking' },
+                ]).map((cat) => (
+                  <span
+                    key={cat.id}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-bg-secondary border border-borderColor-base rounded-full text-xs font-semibold text-textColor-primary"
+                  >
+                    {cat.name}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveProjectCategory(cat.id)}
+                      className="text-textColor-muted hover:text-red-500 cursor-pointer text-sm font-bold ml-1"
+                    >
+                      &times;
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Skill Categories Manager */}
           {activeTab === 'Skills' && (
             <div className="mb-6 p-4 rounded-xl border border-borderColor-base bg-bg-primary/30 space-y-4">
               <h3 className="font-heading text-sm font-bold text-textColor-primary">
@@ -889,6 +1310,7 @@ export const Admin = () => {
               </div>
             </div>
           )}
+
           <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
             <h2 className="font-heading text-lg font-bold">{activeTab}</h2>
             <button onClick={openAddModal} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-secondary text-white text-sm font-semibold cursor-pointer">

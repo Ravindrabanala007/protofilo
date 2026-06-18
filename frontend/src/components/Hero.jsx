@@ -213,7 +213,7 @@ export const Hero = () => {
             <div className="flex gap-3">
               {[
                 { icon: <FaGithub />, link: 'https://github.com' },
-                { icon: <FaLinkedin />, link: 'https://linkedin.com' },
+                { icon: <FaLinkedin />, link: 'https://www.linkedin.com/in/ravindra-banala-b0a956277/' },
                 { icon: <FaInstagram />, link: 'https://instagram.com' },
                 { icon: <FaTwitter />, link: 'https://twitter.com' },
               ].map((s, idx) => (

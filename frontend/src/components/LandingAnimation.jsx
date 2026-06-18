@@ -85,7 +85,7 @@ export const LandingAnimation = ({ onComplete }) => {
 
             {/* Name slide up */}
             <motion.div
-              className="text-center overflow-hidden"
+              className="text-center"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.7 }}
@@ -93,15 +93,19 @@ export const LandingAnimation = ({ onComplete }) => {
               <h1 className="font-heading text-2xl sm:text-3xl font-extrabold tracking-widest text-textColor-primary uppercase">
                 Ravindra Banala
               </h1>
+            </motion.div>
+
+            {/* "Portfolio Loading..." sliding from left to right in a single line */}
+            <div className="w-48 sm:w-64 overflow-hidden">
               <motion.p
-                className="text-accent-secondary font-heading text-sm sm:text-base mt-2 tracking-wider"
-                initial={{ width: 0 }}
-                animate={{ width: 'auto' }}
-                transition={{ delay: 1, duration: 0.8 }}
+                className="text-accent-secondary font-heading text-sm sm:text-base tracking-wider whitespace-nowrap"
+                initial={{ x: '-100%' }}
+                animate={{ x: '0%' }}
+                transition={{ delay: 0.8, duration: 1, ease: [0.16, 1, 0.3, 1] }}
               >
                 Portfolio Loading...
               </motion.p>
-            </motion.div>
+            </div>
 
             {/* Progress bar */}
             <div className="w-48 sm:w-64 h-1 rounded-full bg-borderColor-base overflow-hidden">

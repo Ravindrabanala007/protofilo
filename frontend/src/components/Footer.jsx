@@ -8,7 +8,7 @@ export const Footer = () => {
 
   const socialLinks = [
     { icon: <FaGithub />, href: 'https://github.com', label: 'GitHub' },
-    { icon: <FaLinkedin />, href: 'https://linkedin.com', label: 'LinkedIn' },
+    { icon: <FaLinkedin />, href: 'https://www.linkedin.com/in/ravindra-banala-b0a956277/', label: 'LinkedIn' },
     { icon: <FaInstagram />, href: 'https://instagram.com', label: 'Instagram' },
     { icon: <FaTwitter />, href: 'https://twitter.com', label: 'Twitter' },
   ];
@@ -17,11 +17,14 @@ export const Footer = () => {
     <footer className="border-t border-borderColor-base bg-bg-secondary/20 py-8 font-body">
       <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
         
-        {/* Left Side: Copyright */}
+        {/* Left Side: Signature using Dancing Script web font */}
         <div className="flex flex-col items-center md:items-start gap-1">
-          <p className="text-sm font-semibold text-textColor-primary">
-            Ravindra<span className="text-accent-primary">.AI</span>
-          </p>
+          <span
+            className="text-2xl font-bold gradient-text whitespace-nowrap"
+            style={{ fontFamily: "'Dancing Script', cursive" }}
+          >
+            Ravindra Banala
+          </span>
           <p className="text-xs text-textColor-muted">
             &copy; {currentYear} Ravindra Banala. All rights reserved.
           </p>

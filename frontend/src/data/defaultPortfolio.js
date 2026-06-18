@@ -5,7 +5,14 @@ export const VISITOR_SESSION_KEY = 'portfolio_visit_session';
 /** Resolve image: uploaded data > custom URL > assista folder path > fallback */
 export const resolveAssetUrl = (imageData, imageUrl, assistaPath, fallback = '') => {
   if (imageData) return imageData;
-  if (imageUrl) return imageUrl;
+  if (imageUrl) {
+    // If it's a relative backend path like /assets/..., prepend backend URL
+    if (imageUrl.startsWith('/assets/')) {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
+      return backendUrl ? `${backendUrl}${imageUrl}` : imageUrl;
+    }
+    return imageUrl;
+  }
   if (assistaPath) return assistaPath;
   return fallback;
 };
@@ -224,6 +231,10 @@ export const defaultPortfolioData = {
       },
     ],
   },
+  projectCategories: [
+    { id: 'development', name: 'Development' },
+    { id: 'networking', name: 'Networking' },
+  ],
   skillCategories: [
     { id: 'frontend', name: 'Frontend' },
     { id: 'backend', name: 'Backend' },

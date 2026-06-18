@@ -1,23 +1,29 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaLock, FaArrowLeft, FaUser } from 'react-icons/fa';
-
-const ADMIN_USERNAME = 'ravindra';
-const ADMIN_PASSWORD = 'admin123';
+import { loginAdmin } from '../services/api';
 
 export const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (username.trim().toLowerCase() === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const result = await loginAdmin(username.trim(), password);
+      sessionStorage.setItem('admin_token', result.token);
       sessionStorage.setItem('admin_auth', 'true');
       navigate('/admin');
-    } else {
-      setError('Invalid username or password.');
+    } catch (err) {
+      setError(err.message || 'Invalid username or password.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -73,9 +79,10 @@ export const Login = () => {
 
           <button
             type="submit"
-            className="w-full py-3 rounded-xl bg-accent-primary text-white font-heading font-semibold hover:opacity-90 transition-opacity cursor-pointer"
+            disabled={isLoading}
+            className="w-full py-3 rounded-xl bg-accent-primary text-white font-heading font-semibold hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
           >
-            Sign In
+            {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 

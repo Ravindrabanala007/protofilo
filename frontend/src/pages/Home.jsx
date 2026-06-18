@@ -10,6 +10,7 @@ import { Certifications } from '../components/Certifications';
 import { Achievements } from '../components/Achievements';
 import { Contact } from '../components/Contact';
 import { Footer } from '../components/Footer';
+import { NotificationBanner } from '../components/NotificationBanner';
 import { usePortfolio } from '../context/PortfolioContext';
 
 export const Home = () => {
@@ -21,6 +22,7 @@ export const Home = () => {
 
   return (
     <>
+      <NotificationBanner />
       <Navbar />
       <main className="relative z-10 w-full overflow-x-hidden">
         <Hero />

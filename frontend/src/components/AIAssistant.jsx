@@ -8,7 +8,7 @@ export const AIAssistant = () => {
     {
       id: 1,
       sender: 'bot',
-      text: "Hi! I'm Ravindra's AI Assistant. Ask me about projects, skills, certifications, achievements, and experience.",
+      text: "Hi! I'm Ravindra's AI Assistant. Ask me about his projects, skills, certifications, education, experience, achievements, or anything else!",
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -43,20 +43,36 @@ export const AIAssistant = () => {
       let botResponse;
 
       if (query.includes('project')) {
-        botResponse = "Ravindra has built several featured projects including an AI-Powered Product Review System, a Full Stack E-Commerce Application, and a Secure Multi-Campus Network Design (Cisco Packet Tracer). Click the 'View Projects' chip to scroll directly to the portfolio grid!";
-      } else if (query.includes('skill') || query.includes('tech') || query.includes('language')) {
-        botResponse = "Ravindra is skilled in React.js, JavaScript, Python, Django, Tailwind CSS, MySQL, MongoDB, Docker, Git, and Cisco Networking. Click 'View Skills' to scroll down to the skills panel!";
+        botResponse = "Ravindra has built several featured projects including an AI-Powered Product Review System using React.js, Django & NLP, a Product Quality Review Platform on the full MERN stack with Chart.js, a Secure Multi-Campus Network Design using Cisco Packet Tracer with OSPF & VLANs, and a Full Stack E-Commerce Application with React and Context API. Click 'View Projects' to explore them!";
+      } else if (query.includes('skill') || query.includes('tech') || query.includes('language') || query.includes('stack')) {
+        botResponse = "Ravindra's tech arsenal includes:\n\n🎨 Frontend: React.js (92%), JavaScript ES6+ (90%), HTML5 & CSS3 (95%), Tailwind CSS (90%)\n⚙️ Backend: Python (88%), Django (85%), REST APIs (82%), Node.js (75%)\n🗄️ Databases: MongoDB (80%), MySQL (85%), Mongoose & SQL (82%)\n🚀 DevOps: Git (88%), Docker (75%), Vercel & Netlify (85%)\n🌐 Networking: Cisco Packet Tracer (90%), Routing & Switching (85%), Network Security (78%)";
       } else if (query.includes('resume') || query.includes('cv') || query.includes('download')) {
-        botResponse = "You can download Ravindra's professional resume by clicking the 'Download Resume' chip. Let me know if you need any other information!";
-      } else if (query.includes('contact') || query.includes('email') || query.includes('hire')) {
-        botResponse = "You can email Ravindra directly at ravindra@example.com or use the contact form at the bottom of this page. Let me scroll you down to the contact section!";
+        botResponse = "You can download Ravindra's professional resume by clicking the 'Download Resume' button in the hero section or the chip below. His resume highlights his B.Tech in CS, CCNA certification, MERN stack expertise, and internship experience.";
+      } else if (query.includes('contact') || query.includes('email') || query.includes('hire') || query.includes('reach')) {
+        botResponse = "You can reach Ravindra via email at ravindra@example.com, by phone at +91 98765 43210, or through the contact form at the bottom of this page. He's based in Andhra Pradesh, India, and open to internships, freelance work, and full-time roles!";
         scrollToSection('contact');
-      } else if (query.includes('achievement') || query.includes('score') || query.includes('academic')) {
-        botResponse = "Ravindra is an Academic Topper with an score of 97.45%! He has also excelled in coding challenges, hackathons, and holds Cisco and cloud-computing certifications.";
-      } else if (query.includes('experience') || query.includes('intern')) {
-        botResponse = "Ravindra has completed internships focusing on Web Development and holds several certifications. Scroll to the 'Experience' section to see the timeline!";
+      } else if (query.includes('education') || query.includes('college') || query.includes('university') || query.includes('degree')) {
+        botResponse = "🎓 Ravindra is pursuing a B.Tech in Computer Science (2022–2026) with an outstanding CGPA of 8.9. He's a core member of his university's programming society. He also graduated from Intermediate (MPC) with Distinction and earned Honors in his Secondary School Certificate with multiple academic topper awards.";
+      } else if (query.includes('certif') || query.includes('ccna') || query.includes('cisco') || query.includes('aws')) {
+        botResponse = "📜 Ravindra holds impressive certifications:\n\n🛡️ Cisco Certified Network Associate (CCNA) – Cisco Systems, 2025\n🎓 Full Stack MERN Developer – Udemy Academy, 2024\n🐍 Python Programming & Django Mastery – Meta Professional, 2024\n☁️ AWS Certified Cloud Practitioner – Amazon Web Services, 2025\n\nThese certifications span networking, full-stack development, and cloud computing!";
+      } else if (query.includes('network') || query.includes('routing') || query.includes('vlan') || query.includes('ospf')) {
+        botResponse = "🌐 Ravindra is a certified Cisco Network Engineer (CCNA). He's proficient in Cisco Packet Tracer for topology design, OSPF routing protocols, VLAN configuration, ACL security lists, and subnetting. He designed a Secure Multi-Campus Network linking three campuses with redundant topologies. His networking skills score 85-90% proficiency!";
+      } else if (query.includes('achievement') || query.includes('score') || query.includes('academic') || query.includes('topper')) {
+        botResponse = "🏆 Ravindra's achievements are exceptional:\n\n📊 Academic Score: 97.45% (University Rank Topper)\n💻 LeetCode: 300+ problems solved with 5-star Python on HackerRank\n🏅 Hackathons: Won 3 hackathons, including Smart Campus Hackathon Nexus 2025 (1st among 45 teams) with a face recognition verification system\n📜 Certifications: 10+ across networking, development & cloud";
+      } else if (query.includes('experience') || query.includes('intern') || query.includes('work') || query.includes('job')) {
+        botResponse = "💼 Ravindra's professional experience:\n\n🔹 Web Development Intern at Innovate Tech Labs (May–Jul 2025, Remote) — Built responsive client dashboards with React.js & Tailwind CSS, reducing load times by 20%. Integrated Django REST APIs with MERN databases.\n\n🔹 Frontend Developer Trainee at Nexus Software Solutions (Jan–Apr 2024, Hyderabad) — Scaffolded client landing pages, implemented semantic HTML & JS animations, and created Figma wireframes for production.";
+      } else if (query.includes('hackathon') || query.includes('competition') || query.includes('contest')) {
+        botResponse = "🏅 Ravindra is a 3-time hackathon winner! His highlight was the Smart Campus Hackathon (Nexus 2025) where he designed an automated student verification system using face recognition APIs, securing 1st place among 45 collegiate developer teams. He thrives in competitive programming and problem-solving challenges!";
+      } else if (query.includes('leetcode') || query.includes('competitive') || query.includes('coding challenge') || query.includes('hackerrank')) {
+        botResponse = "💻 Ravindra has solved 300+ LeetCode algorithm problems and earned a 5-star Python programmer badge on HackerRank. He's passionate about data structures, algorithms, and competitive coding, continuously sharpening his problem-solving skills across multiple platforms!";
+      } else if (query.includes('hobby') || query.includes('interest') || query.includes('passion') || query.includes('free time')) {
+        botResponse = "🎯 Beyond coding, Ravindra is passionate about:\n\n💡 Competitive programming & algorithmic challenges\n🌍 Contributing to open-source projects\n📚 Continuous learning of cutting-edge technologies (AI, cloud, DevOps)\n🔬 Exploring network security and infrastructure design\n🎮 Building side projects to experiment with new frameworks";
+      } else if (query.includes('about') || query.includes('who') || query.includes('introduction') || query.includes('tell me about') || query.includes('yourself')) {
+        botResponse = "👋 Ravindra Banala is a dedicated Full Stack Developer and React Developer pursuing B.Tech in Computer Science (CGPA 8.9). He excels in MERN stack, Django, Python, and holds a CCNA certification in networking. With 97.45% academic score, 300+ LeetCode solved, 3 hackathon wins, and internship experience at tech companies, he combines strong academic foundations with practical industry skills. He's passionate about clean code, scalable architecture, and cutting-edge tech!";
+      } else if (query.includes('linkedin') || query.includes('social') || query.includes('connect') || query.includes('profile')) {
+        botResponse = "🔗 Connect with Ravindra on LinkedIn: linkedin.com/in/ravindra-banala-b0a956277/\n\nYou can also find him on GitHub, Instagram, and Twitter. Check the social links in the hero section or footer of this portfolio!";
       } else {
-        botResponse = "I am a simple AI guide for Ravindra's portfolio! Feel free to ask about his skills, projects, achievements, resume, or contact details, or use the quick action chips below.";
+        botResponse = "I'm Ravindra's AI portfolio guide! I can help you learn about his:\n\n📂 Projects (AI, MERN, E-Commerce, Networking)\n🛠️ Technical Skills (React, Python, Django, Node.js)\n🎓 Education (B.Tech CS, CGPA 8.9)\n📜 Certifications (CCNA, AWS, MERN, Django)\n🏆 Achievements (97.45%, 300+ LeetCode, 3 hackathon wins)\n💼 Work Experience (Internships)\n📞 Contact Information\n🔗 LinkedIn & Social Profiles\n\nJust ask about any of these topics!";
       }
 
       const botMsg = {
@@ -146,7 +162,7 @@ export const AIAssistant = () => {
                         : 'bg-bg-glass text-textColor-primary border border-white/5 rounded-tl-none'
                     }`}
                   >
-                    <p className="leading-relaxed">{msg.text}</p>
+                    <p className="leading-relaxed whitespace-pre-line">{msg.text}</p>
                     <span className="block text-[10px] text-right mt-1 opacity-60">{msg.time}</span>
                   </div>
                 </div>

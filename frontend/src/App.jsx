@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { BackgroundCanvas } from './components/BackgroundCanvas';
 import { AIAssistant } from './components/AIAssistant';
 import { LandingAnimation } from './components/LandingAnimation';
@@ -16,6 +16,8 @@ import { ExperiencePage } from './pages/ExperiencePage';
 import { CertificationsPage } from './pages/CertificationsPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { ContactPage } from './pages/ContactPage';
+import { Maintenance } from './pages/Maintenance';
+import { usePortfolio } from './context/PortfolioContext';
 
 const SiteLayout = ({ children, showLanding = false }) => {
   const [landingDone, setLandingDone] = useState(!showLanding);
@@ -37,12 +39,33 @@ const SiteLayout = ({ children, showLanding = false }) => {
   );
 };
 
-function App() {
+/** Wraps public routes with maintenance check — admin/login always accessible */
+const MaintenanceGate = ({ children }) => {
+  const { maintenanceMode, loading } = usePortfolio();
+  const location = useLocation();
+
+  // Always allow admin, login, and maintenance preview routes
+  const isExemptRoute =
+    location.pathname === '/admin' ||
+    location.pathname === '/login' ||
+    location.pathname === '/maintenance';
+  if (isExemptRoute) return children;
+
+  // Show maintenance page for public visitors
+  if (!loading && maintenanceMode) {
+    return <Maintenance />;
+  }
+
+  return children;
+};
+
+function AppRoutes() {
   return (
-    <Router>
+    <MaintenanceGate>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/maintenance" element={<Maintenance />} />
         <Route
           path="/"
           element={
@@ -68,6 +91,14 @@ function App() {
           }
         />
       </Routes>
+    </MaintenanceGate>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppRoutes />
     </Router>
   );
 }

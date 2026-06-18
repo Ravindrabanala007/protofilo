@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { usePortfolio } from '../context/PortfolioContext';
 import { resolveAssetUrl } from '../data/defaultPortfolio';
 

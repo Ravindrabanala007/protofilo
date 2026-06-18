@@ -1,19 +1,34 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaEnvelope, FaMapMarkerAlt, FaPhone, FaPaperPlane } from 'react-icons/fa';
+import { submitContact } from '../services/api';
 
 export const Contact = () => {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [status, setStatus] = useState('');
+  const [statusType, setStatusType] = useState('success');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus('Thanks for reaching out! I will get back to you soon.');
-    setFormData({ name: '', email: '', message: '' });
+    setIsSubmitting(true);
+    setStatus('');
+
+    try {
+      await submitContact(formData);
+      setStatus('Thanks for reaching out! I will get back to you soon.');
+      setStatusType('success');
+      setFormData({ name: '', email: '', message: '' });
+    } catch (err) {
+      setStatus(err.message || 'Failed to send message. Please try again.');
+      setStatusType('error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const contactInfo = [
@@ -100,13 +115,14 @@ export const Contact = () => {
             />
             <button
               type="submit"
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-accent-primary to-accent-secondary text-white font-heading font-semibold hover:shadow-neon transition-all duration-300"
+              disabled={isSubmitting}
+              className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-accent-primary to-accent-secondary text-white font-heading font-semibold hover:shadow-neon transition-all duration-300 disabled:opacity-50"
             >
               <FaPaperPlane className="text-sm" />
-              Send Message
+              {isSubmitting ? 'Sending...' : 'Send Message'}
             </button>
             {status && (
-              <p className="text-sm text-emerald-400">{status}</p>
+              <p className={`text-sm ${statusType === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>{status}</p>
             )}
           </motion.form>
         </div>

@@ -6,12 +6,93 @@ import {
   getVisitorCount,
   trackVisit,
 } from '../data/defaultPortfolio';
+import { fetchAllSections } from '../services/api';
 
 const PortfolioContext = createContext();
 
 export const PortfolioProvider = ({ children }) => {
   const [data, setData] = useState(() => loadPortfolioData());
   const [visitorCount, setVisitorCount] = useState(() => getVisitorCount());
+  const [loading, setLoading] = useState(true);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [globalBlast, setGlobalBlast] = useState(false);
+
+  // Fetch all portfolio data from backend on mount
+  useEffect(() => {
+    const fetchFromBackend = async () => {
+      try {
+        const backendData = await fetchAllSections();
+        if (backendData && Object.keys(backendData).length > 0) {
+          // Track maintenance mode
+          if (backendData.maintenanceMode !== undefined) {
+            setMaintenanceMode(backendData.maintenanceMode);
+          }
+          if (backendData.globalBlast !== undefined) {
+            setGlobalBlast(backendData.globalBlast);
+          }
+
+          // Merge backend data with defaults so no section is empty
+          const merged = { ...loadPortfolioData(), ...backendData };
+          // Only use backend arrays if they have items
+          if (backendData.projects?.length > 0) merged.projects = backendData.projects;
+          if (backendData.skills?.length > 0) merged.skills = backendData.skills;
+          if (backendData.certifications?.length > 0) merged.certifications = backendData.certifications;
+          if (backendData.education?.length > 0) merged.education = backendData.education;
+          if (backendData.experience?.length > 0) merged.experience = backendData.experience;
+          if (backendData.achievements?.stats?.length > 0 || backendData.achievements?.highlights?.length > 0) {
+            merged.achievements = backendData.achievements;
+          }
+          if (backendData.skillCategories?.length > 0) merged.skillCategories = backendData.skillCategories;
+          if (backendData.projectCategories?.length > 0) merged.projectCategories = backendData.projectCategories;
+          if (Object.keys(backendData.settings ?? {}).length > 0) merged.settings = { ...merged.settings, ...backendData.settings };
+          if (Object.keys(backendData.about ?? {}).length > 0) merged.about = { ...merged.about, ...backendData.about };
+
+          savePortfolioData(merged);
+          setData(merged);
+        }
+      } catch (err) {
+        // Backend unavailable — use localStorage fallback
+        console.warn('Backend unavailable, using local data:', err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFromBackend();
+  }, []);
+
+  // Re-fetch from backend (called after admin CRUD operations)
+  const refreshFromBackend = useCallback(async () => {
+    try {
+      const backendData = await fetchAllSections();
+      if (backendData && Object.keys(backendData).length > 0) {
+        if (backendData.maintenanceMode !== undefined) {
+          setMaintenanceMode(backendData.maintenanceMode);
+        }
+        if (backendData.globalBlast !== undefined) {
+          setGlobalBlast(backendData.globalBlast);
+        }
+
+        const merged = { ...loadPortfolioData(), ...backendData };
+        if (backendData.projects?.length > 0) merged.projects = backendData.projects;
+        if (backendData.skills?.length > 0) merged.skills = backendData.skills;
+        if (backendData.certifications?.length > 0) merged.certifications = backendData.certifications;
+        if (backendData.education?.length > 0) merged.education = backendData.education;
+        if (backendData.experience?.length > 0) merged.experience = backendData.experience;
+        if (backendData.achievements?.stats?.length > 0 || backendData.achievements?.highlights?.length > 0) {
+          merged.achievements = backendData.achievements;
+        }
+        if (backendData.skillCategories?.length > 0) merged.skillCategories = backendData.skillCategories;
+        if (backendData.projectCategories?.length > 0) merged.projectCategories = backendData.projectCategories;
+        if (Object.keys(backendData.settings ?? {}).length > 0) merged.settings = { ...merged.settings, ...backendData.settings };
+        if (Object.keys(backendData.about ?? {}).length > 0) merged.about = { ...merged.about, ...backendData.about };
+
+        savePortfolioData(merged);
+        setData(merged);
+      }
+    } catch (err) {
+      console.warn('Backend refresh failed:', err.message);
+    }
+  }, []);
 
   const refreshData = useCallback(() => {
     setData(loadPortfolioData());
@@ -31,24 +112,12 @@ export const PortfolioProvider = ({ children }) => {
     return defaults;
   }, []);
 
-  const importPortfolio = useCallback((imported) => {
-    const merged = { ...loadPortfolioData(), ...imported };
-    if (imported.achievements) merged.achievements = imported.achievements;
-    if (imported.settings) merged.settings = { ...loadPortfolioData().settings, ...imported.settings };
-    savePortfolioData(merged);
-    setData(merged);
-    return merged;
-  }, []);
-
   const recordVisit = useCallback(() => {
     const count = trackVisit();
     setVisitorCount(count);
     return count;
   }, []);
 
-  useEffect(() => {
-    setVisitorCount(getVisitorCount());
-  }, []);
 
   return (
     <PortfolioContext.Provider
@@ -56,10 +125,15 @@ export const PortfolioProvider = ({ children }) => {
         data,
         updateData,
         refreshData,
+        refreshFromBackend,
         resetPortfolio,
-        importPortfolio,
         visitorCount,
         recordVisit,
+        loading,
+        maintenanceMode,
+        setMaintenanceMode,
+        globalBlast,
+        setGlobalBlast,
       }}
     >
       {children}

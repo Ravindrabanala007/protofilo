@@ -13,10 +13,14 @@ export const Projects = ({ limit }) => {
   const projectsData = data.projects ?? [];
   const [filter, setFilter] = useState('all');
 
-  const categories = [
-    { id: 'all', name: 'All Work' },
+  // Dynamic categories from backend + "All Work" always first
+  const dynamicCategories = data.projectCategories ?? [
     { id: 'development', name: 'Development' },
     { id: 'networking', name: 'Networking' },
+  ];
+  const categories = [
+    { id: 'all', name: 'All Work' },
+    ...dynamicCategories,
   ];
 
   const filteredProjects =
